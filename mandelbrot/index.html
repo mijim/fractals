@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.3.1/p5.min.js"
+      integrity="sha512-gQVBYBvfC+uyor5Teonjr9nmY1bN+DlOCezkhzg4ShpC5q81ogvFsr5IV4xXAj6HEtG7M1Pb2JCha97tVFItYQ=="
+      crossorigin="anonymous"
+    ></script>
+    <title>Mandelbrot 🖖🏻</title>
+    <style>
+      body {
+        margin: 0;
+        border: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        background-color: black;
+      }
+      canvas {
+        width: 100vw;
+        height: 100vh;
+        max-width: 900px;
+        max-height: 600px;
+        border-radius: 20px;
+        box-shadow: 0px 4px 42px -5px rgba(255, 255, 255, 0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <script type="text/javascript">
+      let scale = 0.7;
+      let centre;
+      let MAX_ITERATIONS = 20;
+      let draw_timeout;
+      let dragged = false;
+
+      function setup() {
+        createCanvas(
+          Math.min(window.innerWidth, 900),
+          Math.min(window.innerHeight, 600)
+        );
+        centre = createVector(0, 0);
+        pixelDensity(1);
+        noLoop();
+        loadPixels();
+        speedDraw();
+        noStroke();
+        colorMode(HSB);
+      }
+
+      function mouseDragged() {
+        centre.add(
+          ((-movedX / 150) * 1) / scale,
+          ((-movedY / 150) * 1) / scale
+        );
+        speedDraw();
+        dragged = false;
+      }
+
+      function mouseWheel(ev) {
+        if (ev.delta > 0) {
+          scale /= 1.1;
+        } else {
+          scale *= 1.1;
+        }
+        speedDraw();
+      }
+
+      function speedDraw() {
+        MAX_ITERATIONS = 80;
+        draw(true);
+        clearTimeout(draw_timeout);
+        draw_timeout = setTimeout(() => {
+          MAX_ITERATIONS = 80;
+          draw(false);
+        }, 1000);
+      }
+
+      function colorPixel(position, rgb) {
+        pixels[position] = rgb[0];
+        pixels[position + 1] = rgb[1];
+        pixels[position + 2] = rgb[2];
+        pixels[position + 3] = 255;
+      }
+
+      function draw(fast = false) {
+        if (fast) {
+          clear();
+          loadPixels();
+        }
+
+        for (let x = 0; x < width; x += fast ? 3 : 1) {
+          for (let y = 0; y < height; y += fast ? 3 : 1) {
+            let pos_pix = (x + y * width) * 4;
+            let pos_pix_next = (x + 1 + y * width) * 4;
+            let pos_pix_next2 = (x + (y + 1) * width) * 4;
+            let pos_pix_next3 = (x + 1 + (y + 1) * width) * 4;
+
+            let pos_pix_next4 = (x + 2 + y * width) * 4;
+            let pos_pix_next5 = (x + (y + 2) * width) * 4;
+            let pos_pix_next6 = (x + 2 + (y + 2) * width) * 4;
+            let pos_pix_next7 = (x + 1 + (y + 2) * width) * 4;
+            let pos_pix_next8 = (x + 2 + (y + 1) * width) * 4;
+
+            let C = createVector(
+              (x - width / 2) * (4 / width) * (1 / scale) + centre.x,
+              (y - height / 2) * (4 / width) * (1 / scale) + centre.y
+            );
+            let Z = createVector(0, 0);
+            let i = 0;
+            for (i = 0; i < MAX_ITERATIONS; i++) {
+              if (Z.mag() > 2) {
+                //Si magnitud de Z es mayor que 2 ya no es conjunto Mandelbrot
+                break;
+              }
+              const Zn = createVector(sq(Z.x) - sq(Z.y), 2 * Z.x * Z.y);
+              Zn.add(C);
+              Z = Zn;
+            }
+
+            const red =
+              i === MAX_ITERATIONS ? 0 : map(i, 0, MAX_ITERATIONS, 0, 255);
+            const blue =
+              i === MAX_ITERATIONS ? 0 : map(i, 0, MAX_ITERATIONS, 0, 255);
+            const green =
+              i === MAX_ITERATIONS ? 0 : map(i, 0, MAX_ITERATIONS, 0, 255);
+
+            const rgb = [red, blue, green];
+
+            colorPixel(pos_pix, rgb);
+
+            if (fast) {
+              colorPixel(pos_pix_next, rgb);
+              colorPixel(pos_pix_next2, rgb);
+              colorPixel(pos_pix_next3, rgb);
+              colorPixel(pos_pix_next4, rgb);
+              colorPixel(pos_pix_next5, rgb);
+              colorPixel(pos_pix_next7, rgb);
+              colorPixel(pos_pix_next8, rgb);
+            }
+          }
+        }
+        updatePixels();
+      }
+    </script>
+  </body>
+</html>
