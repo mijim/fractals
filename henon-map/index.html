@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="../libs/p5.min.js"></script>
+    <title>Hénon Map Attractor 🖖🏻</title>
+    <style>
+      body {
+        margin: 0;
+        border: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        background-color: black;
+      }
+      canvas {
+        width: 100vw;
+        height: 100vh;
+        max-width: 900px;
+        max-height: 600px;
+        border-radius: 20px;
+        box-shadow: 0px 4px 42px -5px rgba(255, 255, 255, 0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <script type="text/javascript">
+      const num_iterations = 1000000;
+      const x0 = 0.1;
+      const y0 = 0.1;
+      const xMin = -1.4;
+      const xMax = 1.4;
+      const yMin = xMin;
+      const yMax = xMax;
+      let inputA;
+      let inputB;
+      let a = 1.4;
+      let b = 0.3;
+
+      function setup() {
+        createCanvas(
+          Math.min(window.innerWidth, 900),
+          Math.min(window.innerHeight, 600)
+        );
+        pixelDensity(1);
+        noLoop();
+        noStroke();
+        inputA = createInput("")
+          .attribute("placeholder", "a...")
+          .attribute("type", "number")
+          .attribute("value", 1.4);
+        inputA.position(width.innerWidth / 2, window.innerHeight - 100);
+        inputB = createInput("")
+          .attribute("placeholder", "b...")
+          .attribute("type", "number")
+          .attribute("value", 0.3);
+        inputB.position(width.innerWidth / 2, window.innerHeight - 70);
+        const buttonExecute = createButton("Execute").mousePressed(
+          handleExecute
+        );
+        buttonExecute.position(width.innerWidth / 2, window.innerHeight - 40);
+        colorMode(HSB);
+      }
+
+      function handleExecute() {
+        a = parseFloat(inputA.value());
+        b = parseFloat(inputB.value());
+        draw();
+      }
+
+      function colorPixel(position, rgb) {
+        pixels[position] = rgb[0];
+        pixels[position + 1] = rgb[1];
+        pixels[position + 2] = rgb[2];
+        pixels[position + 3] = 255;
+      }
+
+      function draw() {
+        clear();
+        loadPixels();
+        let xN = x0;
+        let yN = y0;
+        for (let i = 0; i < num_iterations; i++) {
+          let prevYN = yN;
+          yN = xN;
+          xN = 1 - a * pow(xN, 2) + b * prevYN;
+
+          const xPixel = Math.round((width * (xN - xMin)) / (xMax - xMin));
+          const yPixel = Math.round((height * (yMax - yN)) / (yMax - yMin));
+          const pos_pix = (xPixel + yPixel * width) * 4;
+          colorPixel(pos_pix, [255, 255, 255]);
+        }
+
+        let pixelDensity = 0;
+
+        for (let x = 0; x < width; x++) {
+          for (let y = 0; y < height; y++) {
+            const pos_pix = (x + y * width) * 4;
+            if (pixels[pos_pix] === 255) {
+              pixelDensity += 1;
+            }
+          }
+        }
+
+        const pixelDensityPercentage = (pixelDensity / (width * height)) * 100;
+
+        console.log("pixelDensity --> ", pixelDensity);
+        console.log("pixelDensityPercentage --> ", pixelDensityPercentage);
+        updatePixels();
+      }
+    </script>
+  </body>
+</html>
