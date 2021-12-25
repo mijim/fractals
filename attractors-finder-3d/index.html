@@ -16,43 +16,38 @@
         height: 100vh;
         width: 100vw;
         overflow: hidden;
-        background-color: #fcfcfc;
+        background-color: black;
       }
       canvas {
-        width: calc(100vh - 120px);
-        height: calc(100vh - 120px);
-        max-width: 900px;
-        max-height: 900px;
-        border-radius: 50px;
-        background: linear-gradient(145deg, #ffffff, #e3e3e3);
-        box-shadow: 20px 20px 60px #c5c5c5, -20px -20px 60px #ffffff;
+        width: 100vw;
+        height: 100vh - 120px;
+        border-radius: 20px;
+        box-shadow: 0px 4px 42px -5px rgba(255, 255, 255, 0.4);
       }
       #genome-container {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
-          "Helvetica Neue", sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
         position: fixed;
         bottom: 10px;
         font-size: 30px;
-        color: #5e5e5e;
+        color: white;
       }
       button {
         cursor: pointer;
+        border-radius: 10px;
         padding: 20px;
         font-size: 20px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
-          "Helvetica Neue", sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
         background: transparent;
-        color: #9b9b9b;
+        color: white;
         border: 0;
-        border-radius: 10px;
-        background: linear-gradient(145deg, #ffffff, #e3e3e3);
-        box-shadow: 6px 6px 12px #cfcfcf, -6px -6px 12px #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.4);
         transition: all 0.2s ease;
       }
       button:hover {
-        border-radius: 10px;
-        background: linear-gradient(145deg, #e3e3e3, #ffffff);
-        box-shadow: 6px 6px 12px #cfcfcf, -6px -6px 12px #ffffff;
+        color: black;
+        background: white;
       }
       .genome-input-container {
         position: fixed;
@@ -65,9 +60,9 @@
 
         padding: 10px;
         font-size: 20px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
-          "Helvetica Neue", sans-serif;
-        color: #5e5e5e;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        color: white;
         border: 0;
         border: 1px solid rgba(255, 255, 255, 0.4);
         outline: none;
@@ -99,32 +94,38 @@
     <div class="genome-button-container animation-button-container">
       <button onclick="executeRecursive()">EXECUTE ANIMATION</button>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="../libs/OrbitControls.min.js"></script>
     <script type="text/javascript">
       const num_search_iterations = Infinity;
-      let num_iterations = 5000000;
+      let num_iterations = 2000000;
       const x0 = 0.1;
       const y0 = 0.1;
       const z0 = 0.1;
       const u0 = 0.1;
       const v0 = 0.1;
       const w0 = 0.1;
-      const scale = 1.5;
-      const powFactor = 2;
+      const scale = 1.2;
+      const powFactor = 3;
       const discardFactor = 500;
       const xMin = -scale;
       const xMax = scale;
       const yMin = -scale;
       const yMax = scale;
 
-      let genome = "LDOHLTPZLRDI";
+      let genome = "MYDHYMLMVEJT";
       let genomeArray = genome.split("");
       let genomeElement = document.getElementById("genome-container");
       let genomeInputElement = document.getElementById("genome-input");
 
       let a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12;
 
+      let camera, scene, renderer;
+      let geometry, material, mesh;
+
       function setup() {
-        createCanvas(window.innerHeight - 120, window.innerHeight - 120);
+        document.getElementsByTagName("canvas")[0].style.display = "none";
+        //createCanvas(window.innerHeight - 120, window.innerHeight - 120);
         pixelDensity(1);
         noLoop();
         setAttributes("antialias", true);
@@ -132,8 +133,38 @@
         noStroke();
         colorMode(HSB);
         genomeToArray();
-        const buttonExecute = createButton("SEARCH NEW").mousePressed(searchFractals);
+        const buttonExecute = createButton("SEARCH NEW").mousePressed(
+          searchFractals
+        );
         buttonExecute.position(10, 10);
+
+        //THREE
+        camera = new THREE.PerspectiveCamera(40, 1, 0.01, 10);
+        camera.position.z = 3;
+        camera.position.x = 4;
+        camera.position.y = 1;
+        scene = new THREE.Scene();
+
+        geometry = new THREE.BoxGeometry(0.001, 0.001, 0.001);
+        material = new THREE.MeshBasicMaterial({
+          color: new THREE.Color("rgb(255, 0, 0)"),
+        });
+
+        mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(0.35, 0.35, 0);
+        scene.add(mesh);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.update();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setAnimationLoop(animation);
+        renderer.render(scene, camera);
+        document.body.appendChild(renderer.domElement);
+      }
+
+      function animation(time) {
+        renderer.render(scene, camera);
       }
 
       function handleDisplay() {
@@ -148,7 +179,9 @@
         var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         var charactersLength = characters.length;
         for (var i = 0; i < 12; i++) {
-          result.push(characters.charAt(Math.floor(Math.random() * charactersLength)));
+          result.push(
+            characters.charAt(Math.floor(Math.random() * charactersLength))
+          );
         }
         return result;
       }
@@ -282,9 +315,21 @@
         let wN = prevGroups[5];
         const prevXn = xN;
         xN =
-          (a1 + a2 * pow(xN, factor) + a3 * pow(yN, factor) + a4 * pow(zN, factor)) * xN +
-          (a5 + a6 * pow(xN, factor) + a7 * pow(yN, factor) + a8 * pow(zN, factor)) * yN +
-          (a9 + a10 * pow(xN, factor) + a11 * pow(yN, factor) + a12 * pow(zN, factor)) * zN;
+          (a1 +
+            a2 * pow(xN, factor) +
+            a3 * pow(yN, factor) +
+            a4 * pow(zN, factor)) *
+            xN +
+          (a5 +
+            a6 * pow(xN, factor) +
+            a7 * pow(yN, factor) +
+            a8 * pow(zN, factor)) *
+            yN +
+          (a9 +
+            a10 * pow(xN, factor) +
+            a11 * pow(yN, factor) +
+            a12 * pow(zN, factor)) *
+            zN;
         wN = vN;
         vN = uN;
         uN = zN;
@@ -305,7 +350,10 @@
       let recursiveTimeout = null;
       let recursiveCount = 0;
       function recursiveDraw(x0N, y0N, z0N, u0N, v0N, w0N) {
-        const group = getGroupCubic([x0N, y0N, z0N, u0N, v0N, w0N], powFactor);
+        const group = getGroupTangent(
+          [x0N, y0N, z0N, u0N, v0N, w0N],
+          powFactor
+        );
         const xN = group[0];
         const yN = group[1];
         const zN = group[2];
@@ -315,13 +363,21 @@
         const xPixel = Math.round((width * (xN - xMin)) / (xMax - xMin));
         const yPixel = Math.round((height * (yMax - yN)) / (yMax - yMin));
         const pos_pix = (xPixel + yPixel * width) * 4;
-        const uColor = (wN + 0.3780993751632451) / (0.5663921337093705 + 0.3780993751632451);
-        const uColor2 = (vN + 0.3780993751632451) / (0.5663921337093705 + 0.3780993751632451);
-        const uColor3 = (xN + 0.3780993751632451) / (0.5663921337093705 + 0.3780993751632451);
+        const uColor =
+          (wN + 0.3780993751632451) / (0.5663921337093705 + 0.3780993751632451);
+        const uColor2 =
+          (vN + 0.3780993751632451) / (0.5663921337093705 + 0.3780993751632451);
+        const uColor3 =
+          (xN + 0.3780993751632451) / (0.5663921337093705 + 0.3780993751632451);
         recursiveCount++;
-        if (recursiveCount < discardFactor || recursiveCount % 2 !== 0) recursiveDraw(xN, yN, zN, uN, vN, wN);
+        if (recursiveCount < discardFactor || recursiveCount % 2 !== 0)
+          recursiveDraw(xN, yN, zN, uN, vN, wN);
         else {
-          colorPixel(pos_pix, [Math.round(uColor * 255), Math.round(uColor2 * 255), Math.round(uColor3 * 255)]);
+          colorPixel(pos_pix, [
+            Math.round(uColor * 255),
+            Math.round(uColor2 * 255),
+            Math.round(uColor3 * 255),
+          ]);
           updatePixels();
           recursiveTimeout = setTimeout(() => {
             if (recursiveCount < num_iterations) {
@@ -334,6 +390,9 @@
       function draw(hasToUpdatePixels = true) {
         clear();
         loadPixels();
+        while (scene.children.length > 0) {
+          scene.remove(scene.children[0]);
+        }
 
         genomeElement.innerHTML = genomeArray.join("");
 
@@ -347,6 +406,7 @@
         let uMax = 0;
         let uMin = 1000000;
 
+        let i2 = 0;
         for (let i = 0; i < num_iterations; i++) {
           const group = getGroupCubic([xN, yN, zN, uN, vN, wN], powFactor);
           xN = group[0];
@@ -359,24 +419,43 @@
           const xPixel = Math.round((width * (xN - xMin)) / (xMax - xMin));
           const yPixel = Math.round((height * (yMax - yN)) / (yMax - yMin));
           const pos_pix = (xPixel + yPixel * width) * 4;
-          const uColor = (wN + 0.3780993751632451) / (0.5663921337093705 + 0.3780993751632451);
-          const uColor2 = (vN + 0.3780993751632451) / (0.5663921337093705 + 0.3780993751632451);
-          const uColor3 = (xN + 0.3780993751632451) / (0.5663921337093705 + 0.3780993751632451);
+          const uColor =
+            (wN + 0.3780993751632451) /
+            (0.5663921337093705 + 0.3780993751632451);
+          const uColor2 =
+            (vN + 0.3780993751632451) /
+            (0.5663921337093705 + 0.3780993751632451);
+          const uColor3 =
+            (uN + 0.3780993751632451) /
+            (0.5663921337093705 + 0.3780993751632451);
 
           uMin = Math.min(uN, uMin);
           uMax = Math.max(uN, uMax);
 
           if (i > discardFactor) {
-            const pixelNg0 = (xPixel - 1 + (yPixel - 1) * width) * 4;
-            const pixelNg1 = (xPixel + (yPixel - 1) * width) * 4;
-            const pixelNg2 = (xPixel + 1 + (yPixel - 1) * width) * 4;
-            const pixelNg3 = (xPixel + 1 + yPixel * width) * 4;
-            const pixelNg4 = (xPixel + 1 + (yPixel + 1) * width) * 4;
-            const pixelNg5 = (xPixel + (yPixel + 1) * width) * 4;
-            const pixelNg6 = (xPixel - 1 + (yPixel + 1) * width) * 4;
-            const pixelNg7 = (xPixel - 1 + yPixel * width) * 4;
+            i2++;
+            if (hasToUpdatePixels && i2 > 100) {
+              i2 = 0;
+              const xPos3d = (100 * (xN - xMin)) / (xMax - xMin);
+              const yPos3d = (100 * (yMax - yN)) / (yMax - yMin);
+              const zPos3d = (100 * (yMax - zN)) / (yMax - yMin);
+              const newMaterial = new THREE.MeshBasicMaterial({
+                color: new THREE.Color(
+                  `rgb(${Math.round(uColor * 255)}, ${Math.round(
+                    uColor2 * 255
+                  )}, ${Math.round(uColor3 * 255)})`
+                ),
+              });
+              mesh = new THREE.Mesh(geometry, newMaterial);
+              mesh.position.set(xPos3d / 100, yPos3d / 100, zPos3d / 100);
+              scene.add(mesh);
+            }
 
-            colorPixel(pos_pix, [Math.round(uColor * 255), Math.round(uColor2 * 255), Math.round(uColor3 * 255)]);
+            colorPixel(pos_pix, [
+              Math.round(uColor * 255),
+              Math.round(uColor2 * 255),
+              Math.round(uColor3 * 255),
+            ]);
           }
         }
 
@@ -395,8 +474,7 @@
           console.log("uMin --> ", uMin);
           console.log("uMax --> ", uMax);
           console.log("pixelDensityPercentage --> ", pixelDensityPercentage);
-
-          updatePixels();
+          renderer.render(scene, camera);
         }
         return pixelDensityPercentage;
       }
